@@ -1,0 +1,24 @@
+# Denní synchronizace forku: main a v1.7 přesně podle cilium/tetragon (merge-upstream, žádné vlastní změny
+# v těchto větvích). Naše workflow jsou jen ve výchozí větvi simecka/v1.7.
+name: synchronizace
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        vetev: [main, v1.7]
+    steps:
+      - name: merge-upstream ${{ matrix.vetev }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Změny workflow v upstreamu GITHUB_TOKEN zapsat nesmí; pak to selže a synchronizaci udělá Claude
+          # ručně (merge-upstream přes API s PAT z Vaultu).
+          gh api -X POST "repos/${{ github.repository }}/merge-upstream" -f branch='${{ matrix.vetev }}'
